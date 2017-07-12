@@ -5,6 +5,7 @@ import (
 
 	"github.com/byuoitav/authmiddleware"
 	"github.com/byuoitav/av-api/health"
+	"github.com/byuoitav/shure-audio-microservice/handlers"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -20,6 +21,8 @@ func main() {
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//TODO add endpoints!
+
+	secure.GET("/health", handlers.Health)
 
 	server := http.Server{
 		Addr:           port,
