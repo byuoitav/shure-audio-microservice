@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bufio"
 	"log"
 	"net"
 )
@@ -28,13 +29,12 @@ func HandleRawCommand(raw RawCommand) (string, error) {
 	log.Printf("Writing to connection...")
 	connection.Write([]byte(raw.Message))
 
-	buffer := make([]byte, 32)
+	reader := bufio.NewReader(connection)
 
-	_, err = connection.Read(buffer)
+	response, err := reader.ReadString('>')
 	if err != nil {
 		return "", err
 	}
 
-	return string(buffer), nil
-
+	return response, nil
 }
