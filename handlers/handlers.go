@@ -9,9 +9,9 @@ import (
 
 func Health(context echo.Context) error {
 
-	message := "The fleet has moved out of lightspeed and we're preparing to - augh!"
+	const HEALTH = "The fleet has moved out of lightspeed and we're preparing to - augh!"
 
-	return context.JSON(http.StatusOK, message)
+	return context.JSON(http.StatusOK, HEALTH)
 
 }
 
