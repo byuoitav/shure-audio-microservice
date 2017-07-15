@@ -35,18 +35,19 @@ func Battery(context echo.Context) error {
 
 	channel := context.Param("channel")
 	address := context.Param("address")
+	format := context.Param("format")
 
 	connection, err := Connect(address)
 	if err != nil {
 		return context.JSON(http.StatusBadRequest, "Could not connect to Shure device: "+err.Error())
 	}
 
-	err = ValidateChannel(connection, channel)
+	message, err := GetMessage(format, channel)
 	if err != nil {
-		return context.JSON(http.StatusBadRequest, "Invalid channel parameter: "+err.Error())
+		return context.JSON(http.StatusBadRequest, "Invalid format. Format must be \"time\" or \"percentage\"")
 	}
 
-	status, err := commands.GetBatteryLevel(connection, address, channel)
+	status, err := commands.GetBattery(connection, message)
 	if err != nil {
 		return context.JSON(http.StatusInternalServerError, "Error retrieving status: "+err.Error())
 	}

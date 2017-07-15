@@ -16,13 +16,11 @@ const CALCULATING = 65534
 const BATT_TYPE = "LION"
 const TIME_INTERVAL = 10
 
-func GetBatteryLevel(connection *net.TCPConn, address, channel string) (status.Battery, error) {
+func GetBattery(connection *net.TCPConn, message string) (status.Battery, error) {
 
-	log.Printf("Getting battery level of mic: %s", channel)
+	log.Printf("Sending message: %s...", message)
 
-	log.Printf("Sending request...")
-	message := []byte("< GET " + channel + " BATT_RUN_TIME >")
-	connection.Write(message)
+	connection.Write([]byte(message))
 
 	reader := bufio.NewReader(connection)
 	response, err := reader.ReadString('>')
@@ -36,7 +34,7 @@ func GetBatteryLevel(connection *net.TCPConn, address, channel string) (status.B
 	log.Printf("Response: %s", string(response))
 
 	log.Printf("Parsing device response...")
-	re := regexp.MustCompile("[\\d]{5}")
+	re := regexp.MustCompile("[\\d]{3,5}")
 	value := re.FindString(response)
 
 	log.Printf("Device response: %s", value)

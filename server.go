@@ -25,7 +25,7 @@ func main() {
 
 	secure.PUT("/raw", handlers.Raw)
 
-	secure.GET("/:address/:channel/battery", handlers.Battery)
+	secure.GET("/:address/:channel/battery/:format", handlers.Battery)
 
 	secure.GET("/:address/:channel/power/status", handlers.Power)
 

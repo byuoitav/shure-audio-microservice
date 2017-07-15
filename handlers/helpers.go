@@ -2,15 +2,34 @@ package handlers
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net"
 )
 
 const PORT = 2202
 
+var MESSAGES = map[string]string{
+	"percentage": "< GET %s BATT_CHARGE >",
+	"time":       "< GET %s BATT_RUN_TIME >",
+}
+
 func ValidateChannel(conn net.Conn, channel string) error {
 
 	return nil
+}
+
+func GetMessage(format, channel string) (string, error) {
+
+	message := MESSAGES[format]
+
+	if len(message) == 0 {
+		return "", errors.New("Invalid format")
+	}
+
+	message = fmt.Sprintf(message, channel)
+
+	return message, nil
 }
 
 func Connect(address string) (*net.TCPConn, error) {
