@@ -57,5 +57,15 @@ func Battery(context echo.Context) error {
 
 func Power(context echo.Context) error {
 
-	return context.JSON(http.StatusOK, "Sucess!")
+	connection, err := Connect(context.Param("address"))
+	if err != nil {
+		return context.JSON(http.StatusBadRequest, "Could not connect to Shure device: "+err.Error())
+	}
+
+	power, err := commands.GetPower(connection, context.Param("channel"))
+	if err != nil {
+		return context.JSON(http.StatusInternalServerError, "Error retrieving status: "+err.Error())
+	}
+
+	return context.JSON(http.StatusOK, power)
 }

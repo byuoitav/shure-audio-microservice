@@ -3,6 +3,7 @@ package commands
 import (
 	"bufio"
 	"errors"
+	"fmt"
 	"log"
 	"net"
 	"regexp"
@@ -59,4 +60,39 @@ func GetBattery(connection *net.TCPConn, message string) (status.Battery, error)
 	return status.Battery{
 		Battery: timeRemaining,
 	}, nil
+}
+
+func GetPower(connection *net.TCPConn, channel string) (status.PowerStatus, error) {
+
+	log.Printf("Getting power state of %s...", channel)
+
+	message := fmt.Sprintf("< GET %s BATT_RUN_TIME >", channel)
+	connection.Write([]byte(message))
+
+	reader := bufio.NewReader(connection)
+	response, err := reader.ReadString('>')
+	if err != nil {
+		errorMessage := "Error getting response: " + err.Error()
+		log.Printf(errorMessage)
+		return status.PowerStatus{}, errors.New(errorMessage)
+	}
+
+	connection.Close()
+	log.Printf("Response: %s", response)
+
+	re := regexp.MustCompile("[\\d]{5}")
+	value := re.FindString(response)
+
+	log.Printf("Value: %s", value)
+
+	if value == "65535" {
+		return status.PowerStatus{
+			Power: "standby",
+		}, nil
+	} else {
+		return status.PowerStatus{
+			Power: "on",
+		}, nil
+	}
+
 }
