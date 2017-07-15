@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/byuoitav/authmiddleware"
-	"github.com/byuoitav/av-api/health"
 	"github.com/byuoitav/shure-audio-microservice/handlers"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
@@ -24,12 +23,16 @@ func main() {
 
 	secure.GET("/health", handlers.Health)
 
+	secure.PUT("/raw", handlers.Raw)
+
+	secure.GET("/:address/:channel/battery", handlers.Battery)
+
+	secure.GET("/:address/:channel/power/status", handlers.Power)
+
 	server := http.Server{
 		Addr:           port,
 		MaxHeaderBytes: 1024 * 10,
 	}
-
-	go health.StartupCheckAndReport()
 
 	router.StartServer(&server)
 }
