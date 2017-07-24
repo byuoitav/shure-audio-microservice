@@ -12,6 +12,7 @@ const PORT = 2202
 var MESSAGES = map[string]string{
 	"percentage": "< GET %s BATT_CHARGE >",
 	"time":       "< GET %s BATT_RUN_TIME >",
+	"bars":       "< GET %s BATT_BARS >",
 }
 
 func ValidateChannel(conn net.Conn, channel string) error {
