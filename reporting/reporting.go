@@ -11,6 +11,7 @@ import (
 
 	"github.com/byuoitav/av-api/dbo"
 	ei "github.com/byuoitav/event-router-microservice/eventinfrastructure"
+	"github.com/byuoitav/shure-audio-microservice/event"
 	"github.com/byuoitav/shure-audio-microservice/publishing"
 	"github.com/byuoitav/shure-audio-microservice/state"
 )
@@ -77,44 +78,23 @@ func Monitor(building, room string) {
 
 func ParseString(data string) (*ei.EventInfo, error) {
 
-	const MIC = "MIC"
-
 	//identify device name
-	//TODO commit to naming scheme???
 	re := regexp.MustCompile("[\\d]{1}")
 	channel := re.FindString(data)
-	deviceName := MIC + channel
+	deviceName := "MIC" + channel
+
+	log.Printf("Device %s reporting", deviceName)
 
 	eventInfo := ei.EventInfo{
 		Device: deviceName,
 	}
 
-	//identify event type: interference, power on, power off
-	switch GetEventType(data) {
+	//identify event type: interference, power, battery
+	event := GetEventType(data)
 
-	case state.Interference:
-
-		err := ProcessInterference(&eventInfo)
-		if err != nil {
-			return nil, err
-		}
-
-	case state.Power:
-
-		err := ProcessPower(&eventInfo)
-		if err != nil {
-			return nil, err
-		}
-
-	case state.Battery:
-
-		err := ProcessBattery(&eventInfo)
-		if err != nil {
-			return nil, err
-		}
-
-	default:
-		return nil, nil
+	err := event.FillEventInfo(data, &eventInfo)
+	if err != nil {
+		return nil, err
 	}
 
 	return &eventInfo, nil
@@ -128,7 +108,7 @@ func PublishEvent(eventInfo *ei.EventInfo, building, room string) error {
 
 	event := ei.Event{
 		Hostname:  building + "-" + room + "-" + eventInfo.Device,
-		Timestamp: time.Now().Format(time.RFC3339)
+		Timestamp: time.Now().Format(time.RFC3339),
 		Event:     *eventInfo,
 		Building:  building,
 		Room:      room,
@@ -145,30 +125,15 @@ func PublishEvent(eventInfo *ei.EventInfo, building, room string) error {
 	return nil
 }
 
-func GetEventType(data string) state.State {
+func GetEventType(data string) event.Context {
 
 	if strings.Contains(data, state.Interference.String()) {
-		return state.Interference
+		return event.Context{E: event.Interference{}}
 	} else if strings.Contains(data, state.Power.String()) {
-		return state.Power
+		return event.Context{E: event.Power{}}
 	} else if strings.Contains(data, state.Battery.String()) {
-		return state.Battery
+		return event.Context{E: event.Battery{}}
 	} else {
-		return state.Unknown
+		return event.Context{}
 	}
-}
-
-//fills EventInfo.EventInfoKey, EventInfo.EventInfoValue, EventInfo.Type, and EventInfo.EventCause
-func ProcessInterference(eventInfo *ei.EventInfo) error {
-	return nil
-}
-
-//fills EventInfo.EventInfoKey, EventInfo.EventInfoValue, EventInfo.Type, and EventInfo.EventCause
-func ProcessPower(eventInfo *ei.EventInfo) error {
-	return nil
-}
-
-//fills EventInfo.EventInfoKey, EventInfo.EventInfoValue, EventInfo.Type, and EventInfo.EventCause
-func ProcessBattery(eventInfo *ei.EventInfo) error {
-	return nil
 }
