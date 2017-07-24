@@ -65,7 +65,7 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 
 	if strings.Contains(data, state.Cycles.String()) {
 
-	} else if strings.Contains:(data, state.RunTime.String()) {
+	} else if strings.Contains(data, state.RunTime.String()) {
 
 	} else if strings.Contains(data, state.Type.String()) {
 
