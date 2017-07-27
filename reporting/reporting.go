@@ -2,9 +2,9 @@ package reporting
 
 import (
 	"bufio"
+	"fmt"
 	"log"
 	"net"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -14,6 +14,7 @@ import (
 	"github.com/byuoitav/shure-audio-microservice/event"
 	"github.com/byuoitav/shure-audio-microservice/publishing"
 	"github.com/byuoitav/shure-audio-microservice/state"
+	"github.com/fatih/color"
 )
 
 const PORT = 2202
@@ -23,34 +24,36 @@ func Monitor(building, room string) {
 	log.Printf("Starting mic reporting in building %s, room %s", building, room)
 
 	//get Shure device
+	log.Printf("Accessing shure device...")
 	shure, err := dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
 	if err != nil {
-		errorMessage := "Could not get Receiver configuration: " + err.Error()
-		log.Printf(errorMessage)
-		publishing.ReportError(errorMessage)
+		color.Set(color.FgRed)
+		log.Printf("Could not get Shure device: %s", err.Error())
+		color.Unset()
 	}
 
 	if len(shure) != 1 {
-		errorMessage := "Invalid reciever configuration detected"
+		errorMessage := fmt.Sprintf("[error] detected %v recievers, expecting 1.", len(shure))
+		color.Set(color.FgRed)
 		log.Printf(errorMessage)
+		color.Unset()
 		publishing.ReportError(errorMessage)
+		return
 	}
 
-	ip := net.ParseIP(shure[0].Address)
-
-	address := net.TCPAddr{
-		IP:   ip,
-		Port: PORT,
-	}
-
-	connection, err := net.DialTCP("tcp", nil, &address)
+	log.Printf("Connecting to device %s at address %s...", shure[0].Name, shure[0].Address)
+	connection, err := net.DialTimeout("tcp", shure[0].Address+":2202", time.Second*3)
 	if err != nil {
-		errorMessage := "Could not connect to device: " + err.Error()
+		errorMessage := fmt.Sprintf("[error] Could not connect to device: %s", err.Error())
+		color.Set(color.FgRed)
 		log.Printf(errorMessage)
+		color.Unset()
 		publishing.ReportError(errorMessage)
+		return
 	}
 
 	reader := bufio.NewReader(connection)
+	log.Printf("Successfully connected to device")
 
 	for {
 
@@ -60,13 +63,17 @@ func Monitor(building, room string) {
 			publishing.ReportError(errorMessage)
 		}
 
+		color.Set(color.FgGreen)
+		log.Printf("Read string: %s", data)
+		color.Unset()
+
 		eventInfo, err := ParseString(data)
 		if err != nil {
 			errorMessage := "Error parsing Shure string: " + err.Error()
 			publishing.ReportError(errorMessage)
 		}
 
-		err = PublishEvent(eventInfo, building, room)
+		err = publishing.PublishEvent(false, eventInfo, building, room)
 		if err != nil {
 			errorMessage := "Could not publish event: " + err.Error()
 			publishing.ReportError(errorMessage)
@@ -91,6 +98,9 @@ func ParseString(data string) (*ei.EventInfo, error) {
 
 	//identify event type: interference, power, battery
 	event := GetEventType(data)
+	if event == nil {
+		return nil, nil
+	}
 
 	err := event.FillEventInfo(data, &eventInfo)
 	if err != nil {
@@ -100,40 +110,15 @@ func ParseString(data string) (*ei.EventInfo, error) {
 	return &eventInfo, nil
 }
 
-func PublishEvent(eventInfo *ei.EventInfo, building, room string) error {
-
-	if eventInfo == nil {
-		return nil
-	}
-
-	event := ei.Event{
-		Hostname:  building + "-" + room + "-" + eventInfo.Device,
-		Timestamp: time.Now().Format(time.RFC3339),
-		Event:     *eventInfo,
-		Building:  building,
-		Room:      room,
-	}
-
-	//get local environment
-	localEnvironment := os.Getenv("LOCAL_ENVIRONMENT")
-	if len(localEnvironment) > 0 {
-		event.LocalEnvironment = true
-	} else {
-		event.LocalEnvironment = false
-	}
-
-	return nil
-}
-
-func GetEventType(data string) event.Context {
+func GetEventType(data string) *event.Context {
 
 	if strings.Contains(data, state.Interference.String()) {
-		return event.Context{E: event.Interference{}}
+		return &event.Context{E: event.Interference{}}
 	} else if strings.Contains(data, state.Power.String()) {
-		return event.Context{E: event.Power{}}
+		return &event.Context{E: event.Power{}}
 	} else if strings.Contains(data, state.Battery.String()) {
-		return event.Context{E: event.Battery{}}
+		return &event.Context{E: event.Battery{}}
 	} else {
-		return event.Context{}
+		return nil
 	}
 }
