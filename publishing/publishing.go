@@ -27,7 +27,8 @@ func Start() {
 
 	log.Printf("Starting publisher...")
 
-	Publisher, err := pb.NewPublisher(PORT, QUEUE_SIZE, CHAN_SIZE)
+	var err error
+	Publisher, err = pb.NewPublisher(PORT, QUEUE_SIZE, CHAN_SIZE)
 	if err != nil {
 		errorMessage := fmt.Sprintf("[publisher] Unable to start publisher. Error: %s\n", err.Error())
 		color.Set(color.FgRed)
@@ -54,7 +55,7 @@ func Start() {
 
 		go func() {
 			var request sb.SubscribeRequest
-			request.Address = "locahost:" + PORT
+			request.Address = "localhost:" + PORT
 			body, err := json.Marshal(request)
 			if err != nil {
 				color.Set(color.FgRed)
@@ -96,7 +97,7 @@ func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) 
 		event.LocalEnvironment = false
 	}
 
-	body, err := json.Marshal(eventInfo)
+	body, err := json.Marshal(event)
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) 
 	log.Printf("Publishing event: %s", body)
 
 	header := [24]byte{}
-	copy(header[:], ei.APISuccess)
+	copy(header[:], ei.Metrics)
 
 	log.Printf("header: %s", header)
 	err = Publisher.Write(common.Message{MessageHeader: header, MessageBody: body})

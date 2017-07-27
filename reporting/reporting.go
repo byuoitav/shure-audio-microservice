@@ -53,7 +53,9 @@ func Monitor(building, room string) {
 	}
 
 	reader := bufio.NewReader(connection)
-	log.Printf("Successfully connected to device")
+	color.Set(color.FgGreen)
+	log.Printf("Successfully connected to device %s", shure[0].Name)
+	color.Unset()
 
 	for {
 
