@@ -22,6 +22,7 @@ func (c *Context) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 
 type Event interface {
 	//Fills EventInfo.EventInfoKey, EventInfo.EventInfoValue, EventInfo.Type, and EventInfo.EventCause
+	//@pre: data does not contain the mic channel
 	FillEventInfo(string, *ei.EventInfo) error
 }
 
@@ -82,12 +83,13 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 
 		eventInfo.EventInfoKey = "remaining battery time"
 		re := regexp.MustCompile("[\\d]{5}]")
-		remainingTime := re.FindString(data)
-
-		if remainingTime == "65535" { //has AA batteries
+		switch re.FindString(data) {
+		case "65535":
 			eventInfo.EventInfoValue = "unknown"
-		} else {
-			eventInfo.EventInfoValue = remainingTime
+		case "65534":
+			eventInfo.EventInfoValue = "calculating"
+		default:
+			eventInfo.EventInfoValue = re.FindString(data)
 		}
 
 		return nil
@@ -98,8 +100,10 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 
 		if strings.Contains(data, "LION") {
 			eventInfo.EventInfoValue = "SB900"
-		} else {
+		} else if strings.Contains(data, "ALKA") {
 			eventInfo.EventInfoValue = "AA"
+		} else {
+			eventInfo.EventInfoValue = "Other"
 		}
 
 		return nil
@@ -107,7 +111,7 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 	} else if strings.Contains(data, state.Charge.String()) {
 
 		eventInfo.EventInfoKey = "battery charge (percentage)"
-		re := regexp.MustCompile("[\\d]{3}")
+		re := regexp.MustCompile("[\\d^0]+")
 		value := re.FindString(data)
 		percentage, err := strconv.Atoi(value)
 		if err != nil {
@@ -126,8 +130,12 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 	} else if strings.Contains(data, state.Bars.String()) {
 
 		eventInfo.EventInfoKey = "battery bars"
-		re := regexp.MustCompile("[\\d]{3}")
+		re := regexp.MustCompile("[\\d^0]+")
 		value := re.FindString(data)
+		if len(value) == 0 {
+			eventInfo.EventInfoValue = "0"
+		}
+
 		bars, err := strconv.Atoi(value)
 		if err != nil {
 			eventInfo = nil
@@ -135,9 +143,9 @@ func (p Battery) FillEventInfo(data string, eventInfo *ei.EventInfo) error {
 		}
 
 		if bars < 0 || bars > 5 {
-			eventInfo.EventInfoValue = "unknown"
+			eventInfo.EventInfoValue = "calculating"
 		} else {
-			eventInfo.EventInfoValue = value[len(value)-1:]
+			eventInfo.EventInfoValue = value
 		}
 		return nil
 

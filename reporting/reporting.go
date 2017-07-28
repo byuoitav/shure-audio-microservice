@@ -69,10 +69,12 @@ func Monitor(building, room string) {
 		log.Printf("Read string: %s", data)
 		color.Unset()
 
-		eventInfo, err := ParseString(data)
+		eventInfo, err := GetEventInfo(data)
 		if err != nil {
 			errorMessage := "Error parsing Shure string: " + err.Error()
 			publishing.ReportError(errorMessage)
+		} else if eventInfo == nil {
+			continue
 		}
 
 		err = publishing.PublishEvent(false, eventInfo, building, room)
@@ -85,14 +87,15 @@ func Monitor(building, room string) {
 
 }
 
-func ParseString(data string) (*ei.EventInfo, error) {
+func GetEventInfo(data string) (*ei.EventInfo, error) {
 
 	//identify device name
-	re := regexp.MustCompile("[\\d]{1}")
+	re := regexp.MustCompile("REP [\\d]")
 	channel := re.FindString(data)
 	deviceName := "MIC" + channel
 
 	log.Printf("Device %s reporting", deviceName)
+	data = re.ReplaceAllString(data, "")
 
 	eventInfo := ei.EventInfo{
 		Device: deviceName,
