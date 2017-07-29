@@ -92,16 +92,30 @@ func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) 
 	log.Printf("Publishing event: %s", body)
 
 	header := [24]byte{}
-	copy(header[:], ei.Metrics)
+	if isError {
+		copy(header[:], ei.APIError)
+	} else {
+		copy(header[:], ei.Metrics)
+	}
 
 	log.Printf("header: %s", header)
 	err = Publisher.Write(common.Message{MessageHeader: header, MessageBody: body})
 	return err
 }
 
-func ReportError(err string) error {
+func ReportError(err, device, building, room string) error {
 
 	log.Printf("reporting error: %s", err)
+
+	eventInfo := ei.EventInfo{
+		EventInfoKey:   "Error String",
+		EventInfoValue: err,
+		Device:         device,
+		Type:           ei.ERROR,
+		EventCause:     ei.INTERNAL,
+	}
+
+	PublishEvent(true, &eventInfo, building, room)
 
 	return nil
 }

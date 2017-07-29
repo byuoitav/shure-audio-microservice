@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -30,14 +31,22 @@ func Monitor(building, room string) {
 		color.Set(color.FgRed)
 		log.Printf("Could not get Shure device: %s", err.Error())
 		color.Unset()
+		return
 	}
 
-	if len(shure) != 1 {
+	if len(shure) == 0 {
+		color.Set(color.FgHiRed)
+		log.Printf("[publisher] No Shure device detected in current room. Aborting publisher...")
+		color.Unset()
+		return
+	}
+
+	if len(shure) > 1 {
 		errorMessage := fmt.Sprintf("[error] detected %v recievers, expecting 1.", len(shure))
 		color.Set(color.FgRed)
 		log.Printf(errorMessage)
 		color.Unset()
-		publishing.ReportError(errorMessage)
+		publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
 		return
 	}
 
@@ -48,12 +57,12 @@ func Monitor(building, room string) {
 		color.Set(color.FgRed)
 		log.Printf(errorMessage)
 		color.Unset()
-		publishing.ReportError(errorMessage)
+		publishing.ReportError(errorMessage, shure[0].Name, building, room)
 		return
 	}
 
 	reader := bufio.NewReader(connection)
-	color.Set(color.FgGreen)
+	color.Set(color.FgHiGreen)
 	log.Printf("Successfully connected to device %s", shure[0].Name)
 	color.Unset()
 
@@ -62,17 +71,17 @@ func Monitor(building, room string) {
 		data, err := reader.ReadString('>')
 		if err != nil {
 			errorMessage := "Error reading Shure string: " + err.Error()
-			publishing.ReportError(errorMessage)
+			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
 		}
 
-		color.Set(color.FgGreen)
+		color.Set(color.FgHiGreen)
 		log.Printf("Read string: %s", data)
 		color.Unset()
 
 		eventInfo, err := GetEventInfo(data)
 		if err != nil {
 			errorMessage := "Error parsing Shure string: " + err.Error()
-			publishing.ReportError(errorMessage)
+			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
 		} else if eventInfo == nil {
 			continue
 		}
@@ -80,7 +89,7 @@ func Monitor(building, room string) {
 		err = publishing.PublishEvent(false, eventInfo, building, room)
 		if err != nil {
 			errorMessage := "Could not publish event: " + err.Error()
-			publishing.ReportError(errorMessage)
+			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
 		}
 
 	}

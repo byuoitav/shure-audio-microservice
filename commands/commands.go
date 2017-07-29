@@ -8,8 +8,10 @@ import (
 	"net"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/byuoitav/av-api/status"
+	"github.com/fatih/color"
 )
 
 const TRANSMITTER_OFF = 65535
@@ -32,7 +34,10 @@ func GetBattery(connection *net.TCPConn, message string) (status.Battery, error)
 	}
 
 	connection.Close()
+
+	color.Set(color.FgHiGreen)
 	log.Printf("Response: %s", string(response))
+	color.Unset()
 
 	log.Printf("Parsing device response...")
 	re := regexp.MustCompile("[\\d]{3,5}")
@@ -66,7 +71,7 @@ func GetPower(connection *net.TCPConn, channel string) (status.PowerStatus, erro
 
 	log.Printf("Getting power state of %s...", channel)
 
-	message := fmt.Sprintf("< GET %s BATT_RUN_TIME >", channel)
+	message := fmt.Sprintf("< GET %s TX_TYPE >", channel)
 	connection.Write([]byte(message))
 
 	reader := bufio.NewReader(connection)
@@ -78,14 +83,15 @@ func GetPower(connection *net.TCPConn, channel string) (status.PowerStatus, erro
 	}
 
 	connection.Close()
-	log.Printf("Response: %s", response)
 
-	re := regexp.MustCompile("[\\d]{5}")
-	value := re.FindString(response)
+	//validate response
+	if !strings.Contains(response, "TX_TYPE") { //got wrong response
+		msg := color.RedString("[server] Erroneous response detected. Expected response containing \"TX_TYPE\", recieved \"%s\"", response)
+		log.Printf(msg)
+		return status.PowerStatus{}, errors.New(msg)
+	}
 
-	log.Printf("Value: %s", value)
-
-	if value == "65535" {
+	if strings.Contains(response, "UNKN") {
 		return status.PowerStatus{
 			Power: "standby",
 		}, nil
