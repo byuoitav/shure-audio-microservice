@@ -38,12 +38,14 @@ const PORT = 2202
 
 func main() {
 
-	hostname, err := os.Hostname()
-	if err != nil {
-		errorMessage := "Could not get hostname of device: " + err.Error()
-		log.Printf(errorMessage)
-		publishing.ReportError(errorMessage)
-	}
+	log.Printf("Starting Shure Audio Microservice...")
+
+	//request event router subsribe to events
+	go publishing.Start()
+
+	hostname := os.Getenv("PI_HOSTNAME")
+
+	log.Printf("Detected hostname: %s", hostname)
 
 	building := strings.Split(hostname, "-")[0]
 	room := strings.Split(hostname, "-")[1]
