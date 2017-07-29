@@ -1,16 +1,13 @@
 package publishing
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"time"
 
 	ei "github.com/byuoitav/event-router-microservice/eventinfrastructure"
-	sb "github.com/byuoitav/event-router-microservice/subscription"
 	"github.com/fatih/color"
 	"github.com/xuther/go-message-router/common"
 	pb "github.com/xuther/go-message-router/publisher"
@@ -54,22 +51,12 @@ func Start() {
 		log.Printf("Local environment detected.")
 
 		go func() {
-			var request sb.SubscribeRequest
-			request.Address = "localhost:" + PORT
-			body, err := json.Marshal(request)
+			var request ei.ConnectionRequest
+			request.PublisherAddr = "localhost:" + PORT
+			err = ei.SendConnectionRequest("http://localhost:6999/subscribe", request, true)
 			if err != nil {
 				color.Set(color.FgRed)
-				log.Printf("[error] %s", err.Error())
-				color.Unset()
-			}
-
-			_, err = http.Post("http://localhost:6999/subscribe", "application/json", bytes.NewBuffer(body))
-			for err != nil {
-				_, err = http.Post("http://localhost:6999/subscribe", "application/json", bytes.NewBuffer(body))
-				color.Set(color.FgRed)
-				log.Printf("[error] The router hasn't subsribed to me yet. Retrying...")
-				color.Unset()
-				time.Sleep(SLEEP_INTERVAL * time.Second)
+				log.Fatalf("[error] Could not connect to event router microservice")
 			}
 		}()
 	}

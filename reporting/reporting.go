@@ -92,7 +92,7 @@ func GetEventInfo(data string) (*ei.EventInfo, error) {
 	//identify device name
 	re := regexp.MustCompile("REP [\\d]")
 	channel := re.FindString(data)
-	deviceName := "MIC" + channel
+	deviceName := "MIC" + channel[len(channel)-1:]
 
 	log.Printf("Device %s reporting", deviceName)
 	data = re.ReplaceAllString(data, "")
@@ -102,14 +102,16 @@ func GetEventInfo(data string) (*ei.EventInfo, error) {
 	}
 
 	//identify event type: interference, power, battery
-	event := GetEventType(data)
-	if event == nil {
+	Event := GetEventType(data)
+	if Event == nil {
 		return nil, nil
 	}
 
-	err := event.FillEventInfo(data, &eventInfo)
+	err := Event.FillEventInfo(data, &eventInfo)
 	if err != nil {
 		return nil, err
+	} else if eventInfo.EventInfoValue == event.FLAG {
+		return nil, nil
 	}
 
 	return &eventInfo, nil
