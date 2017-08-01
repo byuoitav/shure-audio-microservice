@@ -3,12 +3,12 @@ FROM golang:alpine
 RUN apk update && apk add git
 
 RUN mkdir -p /go/src/github.com/byuoitav
-ADD . /go/src/github.com/byuoitav/av-api
+ADD . /go/src/github.com/byuoitav/shure-audio-microservice
 
-WORKDIR /go/src/github.com/byuoitav/av-api
+WORKDIR /go/src/github.com/byuoitav/shure-audio-microservice
 RUN go get -d -v
 RUN go install -v
 
-CMD ["/go/bin/av-api"]
+CMD ["/go/bin/shure-audio-microservice"]
 
-EXPOSE 8000
+EXPOSE 8013
