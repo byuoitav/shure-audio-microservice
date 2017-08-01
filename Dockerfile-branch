@@ -6,9 +6,9 @@ RUN apk update && apk add git
 RUN go get -u github.com/FiloSottile/gvt
 
 RUN mkdir -p /go/src/github.com/byuoitav
-ADD . /go/src/github.com/byuoitav/av-api
+ADD . /go/src/github.com/byuoitav/shure-audio-microservice
 
-WORKDIR /go/src/github.com/byuoitav/av-api
+WORKDIR /go/src/github.com/byuoitav/shure-audio-microservice
 
 RUN gvt fetch -branch ${GITHUB_BRANCH} github.com/byuoitav/configuration-database-microservice
 RUN gvt fetch -branch ${GITHUB_BRANCH} github.com/byuoitav/event-router-microservice
@@ -18,4 +18,4 @@ RUN go install -v
 
 CMD ["/go/bin/shure-audio-microservice"]
 
-EXPOSE 8000
+EXPOSE 8013
