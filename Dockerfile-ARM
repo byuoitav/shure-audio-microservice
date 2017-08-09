@@ -1,0 +1,14 @@
+FROM resin/armv7hf-debian-qemu
+
+RUN [ "cross-build-start" ]
+
+RUN mkdir -p /go
+ADD . /go
+
+WORKDIR /go
+
+CMD ["/go/shure-audio-microservice-arm"]
+
+EXPOSE 8013
+
+RUN [ "cross-build-end" ]
