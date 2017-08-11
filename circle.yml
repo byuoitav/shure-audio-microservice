@@ -17,7 +17,10 @@ dependencies:
         - cd ~/.go_project/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}
         - go get -d -v
         - >
-            if [ $CIRCLE_BRANCH = "stage" ]; then
+            if [ $CIRCLE_BRANCH = "testing" ]; then
+                gvt fetch -branch stage github.com/byuoitav/configuration-database-microservice
+                gvt fetch -branch stage github.com/byuoitav/event-router-microservice
+            elif [ $CIRCLE_BRANCH = "stage" ]; then
                 gvt fetch -branch stage github.com/byuoitav/configuration-database-microservice
                 gvt fetch -branch stage github.com/byuoitav/event-router-microservice
             elif [ $CIRCLE_BRANCH = "production" ]; then
