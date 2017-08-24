@@ -52,6 +52,8 @@ deployment:
         commands:
             - cd $BUILD_PATH && env GOOS=linux GOARCH=arm go build -v -o ${CIRCLE_PROJECT_REPONAME}-arm
             - docker build -f Dockerfile-ARM -t byuoitav/rpi-${CIRCLE_PROJECT_REPONAME}:testing .
+            - gvt delete github.com/byuoitav/configuration-database-microservice
+            - gvt delete github.com/byuoitav/event-router-microservice
             - docker build --build-arg GITHUB_BRANCH=testing -f Dockerfile-branch -t byuoitav/${CIRCLE_PROJECT_REPONAME}:testing .
             - docker login -e $DOCKER_EMAIL -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
             - docker push byuoitav/${CIRCLE_PROJECT_REPONAME}:testing
