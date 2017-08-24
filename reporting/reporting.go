@@ -27,9 +27,11 @@ func Monitor(building, room string) {
 	//get Shure device
 	log.Printf("Accessing shure device...")
 	shure, err := dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
-	if err != nil {
+	for err != nil {
 		color.Set(color.FgRed)
-		log.Printf("Could not get Shure device: %s", err.Error())
+		log.Printf("[error] could not get Shure device: %s", err.Error())
+		shure, err = dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
+		time.Sleep(3 * time.Second)
 		color.Unset()
 		return
 	}
@@ -51,10 +53,11 @@ func Monitor(building, room string) {
 	}
 
 	log.Printf("Connecting to device %s at address %s...", shure[0].Name, shure[0].Address)
+
 	connection, err := net.DialTimeout("tcp", shure[0].Address+":2202", time.Second*3)
 	if err != nil {
 		errorMessage := fmt.Sprintf("[error] Could not connect to device: %s", err.Error())
-		color.Set(color.FgRed)
+		color.Set(color.FgHiYellow, color.Bold)
 		log.Printf(errorMessage)
 		color.Unset()
 		publishing.ReportError(errorMessage, shure[0].Name, building, room)
@@ -62,7 +65,7 @@ func Monitor(building, room string) {
 	}
 
 	reader := bufio.NewReader(connection)
-	color.Set(color.FgHiGreen)
+	color.Set(color.FgHiGreen, color.Bold)
 	log.Printf("Successfully connected to device %s", shure[0].Name)
 	color.Unset()
 
