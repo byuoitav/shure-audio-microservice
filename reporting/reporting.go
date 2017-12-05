@@ -67,6 +67,7 @@ func Monitor(building, room string) {
 		if err != nil {
 			msg := fmt.Sprintf("problem reading receiver string: %s", err.Error())
 			publishing.ReportError(msg, os.Getenv("PI_HOSTNAME"), building, room)
+			continue
 		}
 
 		log.Printf("%s", color.HiGreenString("[reporting] read string: %s", data))
@@ -81,8 +82,8 @@ func Monitor(building, room string) {
 
 		err = publishing.PublishEvent(false, eventInfo, building, room)
 		if err != nil {
-			errorMessage := "Could not publish event: " + err.Error()
-			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
+			msg := fmt.Sprintf("failed to publish event: %s", err.Error())
+			publishing.ReportError(msg, os.Getenv("PI_HOSTNAME"), building, room)
 		}
 
 	}
@@ -94,9 +95,16 @@ func GetEventInfo(data string) (*ei.EventInfo, error) {
 	//identify device name
 	re := regexp.MustCompile("REP [\\d]")
 	channel := re.FindString(data)
-	deviceName := "MIC" + channel[len(channel)-1:]
 
-	log.Printf("Device %s reporting", deviceName)
+	if len(channel) == 0 {
+		msg := "no data"
+		log.Printf("%s", color.HiYellowString("[reporting] %s", msg))
+		return nil, nil
+	}
+
+	deviceName := fmt.Sprintf("MIC%s", channel[len(channel)-1:])
+
+	log.Printf("[resporting] device %s reporting", deviceName)
 	data = re.ReplaceAllString(data, "")
 
 	eventInfo := ei.EventInfo{
