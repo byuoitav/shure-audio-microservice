@@ -45,7 +45,7 @@ func Monitor(building, room string) {
 		return
 	}
 
-	log.Printf("Connecting to device %s at address %s...", shure[0].Name, shure[0].Address)
+	log.Printf("%s", color.HiBlueString("[reporting] connecting to device %s at address %s...", shure[0].Name, shure[0].Address))
 
 	connection, err := net.DialTimeout("tcp", shure[0].Address+":2202", time.Second*3)
 	if err != nil {
@@ -58,26 +58,23 @@ func Monitor(building, room string) {
 	}
 
 	reader := bufio.NewReader(connection)
-	color.Set(color.FgHiGreen, color.Bold)
-	log.Printf("Successfully connected to device %s", shure[0].Name)
-	color.Unset()
+	log.Printf("%s", color.HiGreenString("[reporting] successfully connected to device %s", shure[0].Name))
+	log.Printf("%s", color.HiBlueString("[reporting] listening for events..."))
 
 	for {
 
 		data, err := reader.ReadString('>')
 		if err != nil {
-			errorMessage := "Error reading Shure string: " + err.Error()
-			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
+			msg := fmt.Sprintf("problem reading receiver string: %s", err.Error())
+			publishing.ReportError(msg, os.Getenv("PI_HOSTNAME"), building, room)
 		}
 
-		color.Set(color.FgHiGreen)
-		log.Printf("Read string: %s", data)
-		color.Unset()
+		log.Printf("%s", color.HiGreenString("[reporting] read string: %s", data))
 
 		eventInfo, err := GetEventInfo(data)
 		if err != nil {
-			errorMessage := "Error parsing Shure string: " + err.Error()
-			publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
+			msg := fmt.Sprintf("problem reading receiver string: %s", err.Error())
+			publishing.ReportError(msg, os.Getenv("PI_HOSTNAME"), building, room)
 		} else if eventInfo == nil {
 			continue
 		}
