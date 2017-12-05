@@ -28,27 +28,20 @@ func Monitor(building, room string) {
 	log.Printf("Accessing shure device...")
 	shure, err := dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
 	for err != nil {
-		color.Set(color.FgRed)
-		log.Printf("[error] could not get Shure device: %s", err.Error())
-		shure, err = dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
+		log.Printf("%s", color.HiRedString("[publisher] receiver not found: %s, retrying in 3s...", err.Error()))
 		time.Sleep(3 * time.Second)
-		color.Unset()
-		return
+		shure, err = dbo.GetDevicesByBuildingAndRoomAndRole(building, room, "Receiver")
 	}
 
 	if len(shure) == 0 {
-		color.Set(color.FgHiRed)
-		log.Printf("[publisher] No Shure device detected in current room. Aborting publisher...")
-		color.Unset()
+		log.Printf("%s", color.HiRedString("[publisher] no reciever detected in room. Aborting publisher..."))
 		return
 	}
 
 	if len(shure) > 1 {
-		errorMessage := fmt.Sprintf("[error] detected %v recievers, expecting 1.", len(shure))
-		color.Set(color.FgRed)
-		log.Printf(errorMessage)
-		color.Unset()
-		publishing.ReportError(errorMessage, os.Getenv("PI_HOSTNAME"), building, room)
+		msg := fmt.Sprintf("[error] detected %v recievers, expecting 1.", len(shure))
+		log.Printf("%s", color.HiRedString("[publisher] %s", msg))
+		publishing.ReportError(msg, os.Getenv("PI_HOSTNAME"), building, room)
 		return
 	}
 
