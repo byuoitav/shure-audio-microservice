@@ -10,6 +10,7 @@ import (
 	"github.com/byuoitav/shure-audio-microservice/handlers"
 	"github.com/byuoitav/shure-audio-microservice/publishing"
 	"github.com/byuoitav/shure-audio-microservice/reporting"
+	"github.com/fatih/color"
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/middleware"
 )
@@ -38,17 +39,15 @@ const PORT = 2202
 
 func main() {
 
-	log.Printf("Starting Shure Audio Microservice...")
+	log.Printf("%s", color.HiGreenString("[server] starting Shure Audio Microservice..."))
 
 	//request event router subsribe to events
 	go publishing.Start()
 
 	hostname := os.Getenv("PI_HOSTNAME")
-
-	log.Printf("Detected hostname: %s", hostname)
-
 	building := strings.Split(hostname, "-")[0]
 	room := strings.Split(hostname, "-")[1]
+	log.Printf("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
 
 	//start live monitoring/publishing
 	go reporting.Monitor(building, room)
