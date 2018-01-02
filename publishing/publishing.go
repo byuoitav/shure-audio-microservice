@@ -15,7 +15,7 @@ var node *ei.EventNode
 
 func Start() {
 	log.Printf("Starting node...")
-	node = ei.NewEventNode("Shure", os.Getenv("EVENT_ROUTER_ADDRESS"), []string{})
+	node = ei.NewEventNode("Shure", []string{}, os.Getenv("EVENT_ROUTER_ADDRESS"))
 }
 
 func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) error {
