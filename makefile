@@ -26,7 +26,7 @@ VENDOR=gvt fetch -branch $(BRANCH)
 # docker
 DOCKER=docker
 DOCKER_BUILD=$(DOCKER) build
-DOCKER_LOGIN=$(DOCKER) login -e $(EMAIL) -u $(UNAME) -p $(PASS)
+DOCKER_LOGIN=$(DOCKER) login -u $(UNAME) -p $(PASS)
 DOCKER_PUSH=$(DOCKER) push
 DOCKER_FILE=dockerfile
 DOCKER_FILE_ARM=dockerfile-arm
@@ -90,10 +90,16 @@ docker-arm: $(NAME)-arm
 ifeq "$(BRANCH)" "master"
 	$(eval BRANCH=development)
 endif
+ifeq "$(BRANCH)" "production"
+	$(eval BRANCH=latest)
+endif
 	$(DOCKER_BUILD) --build-arg NAME=$(NAME) -f $(DOCKER_FILE_ARM) -t $(ORG)/rpi-$(NAME):$(BRANCH) .
 	@echo logging in to dockerhub...
 	@$(DOCKER_LOGIN)
 	$(DOCKER_PUSH) $(ORG)/rpi-$(NAME):$(BRANCH)
+ifeq "$(BRANCH)" "latest"
+	$(eval BRANCH=production)
+endif
 ifeq "$(BRANCH)" "development"
 	$(eval BRANCH=master)
 endif
