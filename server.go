@@ -49,8 +49,10 @@ func main() {
 	room := strings.Split(hostname, "-")[1]
 	log.Printf("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
 
-	//start live monitoring/publishing
-	go reporting.Monitor(building, room)
+	if strings.EqualFold(strings.Split(hostname, "-"), "CP1") {
+		//start live monitoring/publishing
+		go reporting.Monitor(building, room)
+	}
 
 	port := ":8013"
 	router := echo.New()
