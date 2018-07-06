@@ -49,8 +49,12 @@ func main() {
 	room := strings.Split(hostname, "-")[1]
 	log.Printf("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
 
-	//start live monitoring/publishing
-	go reporting.Monitor(building, room)
+	//we only want to monitor if we're the first device in the room
+	if strings.EqualFold(strings.Split(hostname, "-")[2], "CP1") {
+
+		//start live monitoring/publishing
+		go reporting.Monitor(building, room)
+	}
 
 	port := ":8013"
 	router := echo.New()
