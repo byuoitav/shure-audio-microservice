@@ -4,7 +4,7 @@ jobs:
         docker:
             - image: byuoitav/build-env:master
 
-        working_directory: /go/src/github.com/byuoitav/av-api
+        working_directory: /go/src/github.com/byuoitav/shure-audio-microservice
 
         steps:
             - checkout
