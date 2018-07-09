@@ -1,36 +1,37 @@
 package publishing
 
 import (
-	"log"
 	"os"
+	"strings"
 	"time"
 
-	ei "github.com/byuoitav/event-router-microservice/eventinfrastructure"
+	"github.com/byuoitav/common/events"
+	"github.com/byuoitav/common/log"
 )
 
 const CHAN_SIZE = 10
 const SLEEP_INTERVAL = 3
 
-var node *ei.EventNode
+var node *events.EventNode
 
 func Start() {
-	log.Printf("Starting node...")
-	node = ei.NewEventNode("Shure", []string{}, os.Getenv("EVENT_ROUTER_ADDRESS"))
+	log.L.Infof("Starting node...")
+	node = events.NewEventNode("Shure", os.Getenv("EVENT_ROUTER_ADDRESS"), []string{})
 }
 
-func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) error {
-
-	if eventInfo == nil {
+func PublishEvent(isError bool, eventInfo events.EventInfo, building, room string) error {
+	if eventInfo.Device == "" || strings.EqualFold(eventInfo.EventInfoKey, "ignored") {
 		return nil
 	}
 
-	event := ei.Event{
+	event := events.Event{
 		Hostname:  building + "-" + room + "-" + eventInfo.Device,
 		Timestamp: time.Now().Format(time.RFC3339),
-		Event:     *eventInfo,
+		Event:     eventInfo,
 		Building:  building,
 		Room:      room,
 	}
+	log.L.Debugf("Publishing event %+v", event)
 
 	//get local environment
 	localEnvironment := os.Getenv("LOCAL_ENVIRONMENT")
@@ -40,33 +41,31 @@ func PublishEvent(isError bool, eventInfo *ei.EventInfo, building, room string) 
 		event.LocalEnvironment = false
 	}
 
-	log.Printf("Publishing event: %v", event)
-
 	header := ""
 	if isError {
-		header = ei.APIError
+		header = events.APIError
 	} else {
-		header = ei.Metrics
+		header = events.Metrics
 	}
 
-	log.Printf("header: %s", header)
+	log.L.Debugf("header: %s", header)
 
-	return node.PublishEvent(event, header)
+	return node.PublishEvent(header, event)
 }
 
 func ReportError(err, device, building, room string) error {
 
-	log.Printf("reporting error: %s", err)
+	log.L.Debugf("reporting error: %s", err)
 
-	eventInfo := ei.EventInfo{
+	eventInfo := events.EventInfo{
 		EventInfoKey:   "Error String",
 		EventInfoValue: err,
 		Device:         device,
-		Type:           ei.ERROR,
-		EventCause:     ei.INTERNAL,
+		Type:           events.ERROR,
+		EventCause:     events.INTERNAL,
 	}
 
-	PublishEvent(true, &eventInfo, building, room)
+	PublishEvent(true, eventInfo, building, room)
 
 	return nil
 }
