@@ -51,7 +51,6 @@ func main() {
 
 	//we only want to monitor if we're the first device in the room
 	if strings.EqualFold(strings.Split(hostname, "-")[2], "CP1") {
-
 		//start live monitoring/publishing
 		go reporting.Monitor(building, room)
 	}

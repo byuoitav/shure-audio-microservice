@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/byuoitav/av-api/statusevaluators"
+	"github.com/byuoitav/common/status"
 	"github.com/fatih/color"
 )
 
@@ -19,7 +19,7 @@ const CALCULATING = 65534
 const BATT_TYPE = "LION"
 const TIME_INTERVAL = 10
 
-func GetBattery(connection *net.TCPConn, message string) (statusevaluators.Battery, error) {
+func GetBattery(connection *net.TCPConn, message string) (status.Battery, error) {
 
 	log.Printf("Sending message: %s...", message)
 
@@ -30,7 +30,7 @@ func GetBattery(connection *net.TCPConn, message string) (statusevaluators.Batte
 	if err != nil {
 		errorMessage := "Error getting response: " + err.Error()
 		log.Printf(errorMessage)
-		return statusevaluators.Battery{}, errors.New(errorMessage)
+		return status.Battery{}, errors.New(errorMessage)
 	}
 
 	connection.Close()
@@ -49,25 +49,25 @@ func GetBattery(connection *net.TCPConn, message string) (statusevaluators.Batte
 	if err != nil {
 		errorMessage := "Could not parse time string: " + err.Error()
 		log.Printf(errorMessage)
-		return statusevaluators.Battery{}, errors.New(errorMessage)
+		return status.Battery{}, errors.New(errorMessage)
 	}
 
 	if timeRemaining == TRANSMITTER_OFF {
 		errorMessage := "Transmitter deactivated."
 		log.Printf(errorMessage)
-		return statusevaluators.Battery{}, errors.New(errorMessage)
+		return status.Battery{}, errors.New(errorMessage)
 	} else if timeRemaining == CALCULATING {
 		errorMessage := "Currently calculating battery level"
 		log.Printf(errorMessage)
-		return statusevaluators.Battery{}, errors.New(errorMessage)
+		return status.Battery{}, errors.New(errorMessage)
 	}
 
-	return statusevaluators.Battery{
+	return status.Battery{
 		Battery: timeRemaining,
 	}, nil
 }
 
-func GetPower(connection *net.TCPConn, channel string) (statusevaluators.PowerStatus, error) {
+func GetPower(connection *net.TCPConn, channel string) (status.Power, error) {
 
 	log.Printf("Getting power state of %s...", channel)
 
@@ -79,7 +79,7 @@ func GetPower(connection *net.TCPConn, channel string) (statusevaluators.PowerSt
 	if err != nil {
 		errorMessage := "Error getting response: " + err.Error()
 		log.Printf(errorMessage)
-		return statusevaluators.PowerStatus{}, errors.New(errorMessage)
+		return status.Power{}, errors.New(errorMessage)
 	}
 
 	connection.Close()
@@ -88,15 +88,15 @@ func GetPower(connection *net.TCPConn, channel string) (statusevaluators.PowerSt
 	if !strings.Contains(response, "TX_TYPE") { //got wrong response
 		msg := color.RedString("[server] Erroneous response detected. Expected response containing \"TX_TYPE\", recieved \"%s\"", response)
 		log.Printf(msg)
-		return statusevaluators.PowerStatus{}, errors.New(msg)
+		return status.Power{}, errors.New(msg)
 	}
 
 	if strings.Contains(response, "UNKN") {
-		return statusevaluators.PowerStatus{
+		return status.Power{
 			Power: "standby",
 		}, nil
 	} else {
-		return statusevaluators.PowerStatus{
+		return status.Power{
 			Power: "on",
 		}, nil
 	}
