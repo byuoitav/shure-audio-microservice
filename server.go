@@ -1,12 +1,12 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common/log"
 	"github.com/byuoitav/shure-audio-microservice/handlers"
 	"github.com/byuoitav/shure-audio-microservice/publishing"
 	"github.com/byuoitav/shure-audio-microservice/reporting"
@@ -39,7 +39,7 @@ const PORT = 2202
 
 func main() {
 
-	log.Printf("%s", color.HiGreenString("[server] starting Shure Audio Microservice..."))
+	log.L.Infof("%s", color.HiGreenString("[server] starting Shure Audio Microservice..."))
 
 	//request event router subsribe to events
 	go publishing.Start()
@@ -47,7 +47,7 @@ func main() {
 	hostname := os.Getenv("PI_HOSTNAME")
 	building := strings.Split(hostname, "-")[0]
 	room := strings.Split(hostname, "-")[1]
-	log.Printf("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
+	log.L.Infof("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
 
 	if strings.EqualFold(strings.Split(hostname, "-")[2], "CP1") {
 		//start live monitoring/publishing
@@ -71,6 +71,9 @@ func main() {
 	secure.GET("/:address/:channel/battery/:format", handlers.Battery)
 
 	secure.GET("/:address/:channel/power/status", handlers.Power)
+
+	secure.PUT("/log-level/:level", log.SetLogLevel)
+	secure.GET("/log-level", log.GetLogLevel)
 
 	server := http.Server{
 		Addr:           port,
