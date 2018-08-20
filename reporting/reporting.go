@@ -126,17 +126,17 @@ func GetEventInfo(data string) ([]events.EventInfo, error) {
 	}
 
 	err := E.FillEventInfo(data, &eventInfo)
-	if strings.EqualFold(eventInfo.EventInfoValue, "ignored") || len(eventInfo.EventInfoKey) == 0 {
+	if strings.EqualFold(eventInfo.EventInfoValue, eventhelper.FLAG) || len(eventInfo.EventInfoKey) == 0 {
+		log.L.Debugf("Ignoring event: %v", data)
 		return []events.EventInfo{}, nil
-	}
-
-	if err != nil {
-
+	} else if err != nil {
+		log.L.Debugf("There was an error: %v", err.Error())
 		eventInfoArray = append(eventInfoArray, eventInfo)
 		return eventInfoArray, err
-	} else if eventInfo.EventInfoValue == eventhelper.FLAG {
+	} else {
 
 		if strings.Contains(eventInfo.EventInfoKey, "minutes") {
+			log.L.Debugf("Translating to minutes hours from: %v", eventInfo)
 			//translate to hours/minutes, generate new event
 
 			val, err := strconv.Atoi(eventInfo.EventInfoValue)
