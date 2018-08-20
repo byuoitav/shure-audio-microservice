@@ -61,6 +61,7 @@ ifneq "$(BRANCH)" "master"
 	# e.g. $(VENDOR) github.com/byuoitav/event-router-microservice
 	$(VENDOR) github.com/byuoitav/authmiddleware
 	$(VENDOR) github.com/byuoitav/common
+
 endif
 
 docker: docker-x86 docker-arm
@@ -72,10 +73,12 @@ endif
 ifeq "$(BRANCH)" "production"
 	$(eval BRANCH=latest)
 endif
+
 	$(DOCKER_BUILD) --build-arg NAME=$(NAME) -f $(DOCKER_FILE) -t $(ORG)/$(NAME):$(BRANCH) .
 	@echo logging in to dockerhub...
 	@$(DOCKER_LOGIN)
 	$(DOCKER_PUSH) $(ORG)/$(NAME):$(BRANCH)
+
 ifeq "$(BRANCH)" "latest"
 	$(eval BRANCH=production)
 endif
