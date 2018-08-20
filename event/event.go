@@ -12,7 +12,7 @@ import (
 	"github.com/fatih/color"
 )
 
-const FLAG = "ingored"
+const FLAG = "ignored"
 
 //wrapper for event types
 type Context struct {
