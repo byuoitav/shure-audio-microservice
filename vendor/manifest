@@ -127,14 +127,6 @@
 			"notests": true
 		},
 		{
-			"importpath": "github.com/labstack/echo",
-			"repository": "https://github.com/labstack/echo",
-			"vcs": "git",
-			"revision": "f9e97332f3bebd2c26753f7dc679588a22cb387d",
-			"branch": "HEAD",
-			"notests": true
-		},
-		{
 			"importpath": "github.com/labstack/gommon/bytes",
 			"repository": "https://github.com/labstack/gommon",
 			"vcs": "git",
