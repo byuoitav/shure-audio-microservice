@@ -1,0 +1,14 @@
+{
+    "name": "shure-audio-microservice",
+    "port": ":8013",
+    "env-vars": [
+        "BYPASS_AUTH",
+        "DB_ADDRESS",
+        "DB_PASSWORD",
+        "DB_USERNAME",
+        "HUB_ADDRESS",
+        "PI_HOSTNAME",
+        "ROOM_SYSTEM",
+        "SYSTEM_ID"
+    ]
+}

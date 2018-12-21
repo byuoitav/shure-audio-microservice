@@ -5,67 +5,69 @@ import (
 	"strings"
 	"time"
 
-	"github.com/byuoitav/common/events"
+	"github.com/byuoitav/central-event-system/hub/base"
+	"github.com/byuoitav/central-event-system/messenger"
 	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/nerr"
+	"github.com/byuoitav/common/v2/events"
 )
 
 const CHAN_SIZE = 10
 const SLEEP_INTERVAL = 3
 
-var node *events.EventNode
+var m *messenger.Messenger
 
 func Start() {
-	log.L.Infof("Starting node...")
-	node = events.NewEventNode("Shure", os.Getenv("EVENT_ROUTER_ADDRESS"), []string{})
+	log.L.Infof("Starting messenger...")
+	var err *nerr.E
+	m, err = messenger.BuildMessenger(os.Getenv("HUB_ADDRESS"), base.Messenger, 1000)
+	if err != nil {
+
+	}
 }
 
-func PublishEvent(isError bool, eventInfo events.EventInfo, building, room string) error {
-	if eventInfo.Device == "" || strings.EqualFold(eventInfo.EventInfoKey, "ignored") {
+func PublishEvent(isError bool, event events.Event, building, room string) error {
+	if event.TargetDevice.DeviceID == "" || strings.EqualFold(event.Key, "ignored") {
 		return nil
 	}
+	event.GeneratingSystem = event.TargetDevice.DeviceID
+	event.Timestamp = time.Now()
+	event.AffectedRoom = events.GenerateBasicRoomInfo(room)
 
-	event := events.Event{
-		Hostname:  building + "-" + room + "-" + eventInfo.Device,
-		Timestamp: time.Now().Format(time.RFC3339),
-		Event:     eventInfo,
-		Building:  building,
-		Room:      room,
-	}
 	log.L.Debugf("Publishing event %+v", event)
 
-	//get local environment
-	localEnvironment := os.Getenv("LOCAL_ENVIRONMENT")
-	if len(localEnvironment) > 0 {
-		event.LocalEnvironment = true
-	} else {
-		event.LocalEnvironment = false
+	//get room system
+	roomSystem := os.Getenv("ROOM_SYSTEM")
+	if len(roomSystem) > 0 {
+		event.AddToTags(roomSystem)
 	}
 
 	header := ""
 	if isError {
-		header = events.APIError
+		event.AddToTags(events.Error)
+		header = events.Error
 	} else {
+		event.AddToTags(events.Error)
 		header = events.Metrics
 	}
 
 	log.L.Debugf("header: %s", header)
 
-	return node.PublishEvent(header, event)
+	m.SendEvent(event)
+	return nil
 }
 
 func ReportError(err, device, building, room string) error {
 
 	log.L.Debugf("reporting error: %s", err)
 
-	eventInfo := events.EventInfo{
-		EventInfoKey:   "Error String",
-		EventInfoValue: err,
-		Device:         device,
-		Type:           events.ERROR,
-		EventCause:     events.INTERNAL,
+	event := events.Event{
+		Key:          "Error String",
+		Value:        err,
+		TargetDevice: events.GenerateBasicDeviceInfo(device),
 	}
-
-	PublishEvent(true, eventInfo, building, room)
+	event.AddToTags(events.Error, events.Internal)
+	PublishEvent(true, event, building, room)
 
 	return nil
 }
