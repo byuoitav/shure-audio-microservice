@@ -43,7 +43,7 @@ func main() {
 	//request event router subsribe to events
 	go publishing.Start()
 
-	hostname := os.Getenv("PI_HOSTNAME")
+	hostname := os.Getenv("SYSTEM_ID")
 	building := strings.Split(hostname, "-")[0]
 	room := strings.Split(hostname, "-")[1]
 	log.L.Infof("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
