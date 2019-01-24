@@ -32,7 +32,7 @@ func PublishEvent(isError bool, event events.Event, building, room string) error
 	}
 	event.GeneratingSystem = event.TargetDevice.DeviceID
 	event.Timestamp = time.Now()
-	event.AffectedRoom = events.GenerateBasicRoomInfo(room)
+	event.AffectedRoom = events.GenerateBasicRoomInfo(building + "-" + room)
 
 	log.L.Debugf("Publishing event %+v", event)
 
