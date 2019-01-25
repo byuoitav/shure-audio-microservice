@@ -148,7 +148,7 @@ func GetEventInfo(data, roomID string) ([]events.Event, error) {
 			minutes := val % 60
 
 			hoursMinuteEvent := events.Event{
-				Key:          "battery level (hours:minute remaining",
+				Key:          "battery-charge-hours-minutes",
 				Value:        fmt.Sprintf("%v:%v", hours, minutes),
 				TargetDevice: events.GenerateBasicDeviceInfo(deviceName),
 			}
