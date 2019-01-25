@@ -5,14 +5,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/byuoitav/authmiddleware"
+	"github.com/byuoitav/common"
 	"github.com/byuoitav/common/log"
+	"github.com/byuoitav/common/v2/auth"
 	"github.com/byuoitav/shure-audio-microservice/handlers"
 	"github.com/byuoitav/shure-audio-microservice/publishing"
 	"github.com/byuoitav/shure-audio-microservice/reporting"
 	"github.com/fatih/color"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
 )
 
 /**
@@ -44,7 +43,7 @@ func main() {
 	//request event router subsribe to events
 	go publishing.Start()
 
-	hostname := os.Getenv("PI_HOSTNAME")
+	hostname := os.Getenv("SYSTEM_ID")
 	building := strings.Split(hostname, "-")[0]
 	room := strings.Split(hostname, "-")[1]
 	log.L.Infof("%s", color.HiBlueString("[server] detected hostname: %s", hostname))
@@ -56,25 +55,17 @@ func main() {
 	}
 
 	port := ":8013"
-	router := echo.New()
-	router.Pre(middleware.RemoveTrailingSlash())
-	router.Use(middleware.CORS())
-
-	// Use the `secure` routing group to require authentication
-	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
 	//TODO share one connection!
 
-	secure.GET("/health", handlers.Health)
+	router := common.NewRouter()
 
-	secure.PUT("/raw", handlers.Raw)
+	write := router.Group("", auth.AuthorizeRequest("write-state", "room", auth.LookupResourceFromAddress))
+	write.PUT("/raw", handlers.Raw)
 
-	secure.GET("/:address/:channel/battery/:format", handlers.Battery)
-
-	secure.GET("/:address/:channel/power/status", handlers.Power)
-
-	secure.PUT("/log-level/:level", log.SetLogLevel)
-	secure.GET("/log-level", log.GetLogLevel)
+	read := router.Group("", auth.AuthorizeRequest("read-state", "room", auth.LookupResourceFromAddress))
+	read.GET("/:address/:channel/battery/:format", handlers.Battery)
+	read.GET("/:address/:channel/power/status", handlers.Power)
 
 	server := http.Server{
 		Addr:           port,

@@ -32,14 +32,14 @@ func PublishEvent(isError bool, event events.Event, building, room string) error
 	}
 	event.GeneratingSystem = event.TargetDevice.DeviceID
 	event.Timestamp = time.Now()
-	event.AffectedRoom = events.GenerateBasicRoomInfo(room)
+	event.AffectedRoom = events.GenerateBasicRoomInfo(building + "-" + room)
 
 	log.L.Debugf("Publishing event %+v", event)
 
 	//get room system
 	roomSystem := os.Getenv("ROOM_SYSTEM")
 	if len(roomSystem) > 0 {
-		event.AddToTags(roomSystem)
+		event.AddToTags(events.RoomSystem)
 	}
 
 	header := ""
@@ -47,7 +47,6 @@ func PublishEvent(isError bool, event events.Event, building, room string) error
 		event.AddToTags(events.Error)
 		header = events.Error
 	} else {
-		event.AddToTags(events.Error)
 		header = events.Metrics
 	}
 

@@ -77,7 +77,7 @@ func (p Battery) FillEventInfo(data string, e *events.Event) error {
 
 	if strings.Contains(data, state.Cycles.String()) {
 
-		e.Key = "battery cycles"
+		e.Key = "battery-cycles"
 		re := regexp.MustCompile("[1-9][0-9]*")
 		batteryCycles := re.FindString(data)
 		color.Set(color.FgYellow)
@@ -97,7 +97,7 @@ func (p Battery) FillEventInfo(data string, e *events.Event) error {
 
 	} else if strings.Contains(data, state.RunTime.String()) {
 
-		e.Key = "battery charge (minutes remaining)"
+		e.Key = "battery-charge-minutes"
 		re := regexp.MustCompile("[1-9][0-9]*")
 		runTime := re.FindString(data)
 
@@ -120,7 +120,7 @@ func (p Battery) FillEventInfo(data string, e *events.Event) error {
 
 	} else if strings.Contains(data, state.Type.String()) {
 
-		e.Key = "battery type"
+		e.Key = "battery-type"
 
 		re := regexp.MustCompile("[\\s][A-Z]{4}[\\s]")
 		batteryType := re.FindString(data)
@@ -135,7 +135,7 @@ func (p Battery) FillEventInfo(data string, e *events.Event) error {
 
 	} else if strings.Contains(data, state.Charge.String()) {
 
-		e.Key = "battery charge (percentage)"
+		e.Key = "battery-charge-percentage"
 		re := regexp.MustCompile("[1-9][0-9]*")
 		value := re.FindString(data)
 		percentage, err := strconv.Atoi(value)
@@ -157,7 +157,7 @@ func (p Battery) FillEventInfo(data string, e *events.Event) error {
 
 	} else if strings.Contains(data, state.Bars.String()) {
 
-		e.Key = "battery charge (bars)"
+		e.Key = "battery-charge-bars"
 		re := regexp.MustCompile("[1-9][0-9]*")
 		value := re.FindString(data)
 
